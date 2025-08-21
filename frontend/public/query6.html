@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Review</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/morph/bootstrap.min.css">
+    <link rel="icon" type="image/png" href="http://34.169.216.0:5002/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="http://34.169.216.0:5002/assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="http://34.169.216.0:5002/assets/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="http://34.169.216.0:5002/assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="http://34.169.216.0:5002/assets/favicon/site.webmanifest" />
+    <style>
+        content-section {
+            background-color: #f8f9fa;
+            /* Light gray background */
+        }
+
+        .feature-box {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="fas fa-film"></i> Multi-Media Database </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="query1.html">Media Entries by Series</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query2.html">Review Viewer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query3.html">Genre Count Summary</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query4.html">Highest-Rated Media by Writer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query5.html">Reviewed Media Released After 2010</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="query6.html">Create New Review</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content -->
+    <div class="content-section">
+        <div class="container">
+            <div class="feature-box">
+                <h2>Create New Review</h2>
+                <form id="addReviewForm" class="mb-4">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">User Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="text" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileImage" class="form-label">Profile Image</label>
+                        <input type="text" class="form-control" id="profileImage" name="profileImage">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mediaDropdown" class="form-label">Media Title</label>
+                        <select id="mediaDropdown" class="form-control">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="review" class="form-label">Review</label>
+                        <textarea class="form-control" id="review" name="review" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="score" class="form-label">Score</label>
+                        <input type="number" class="form-control" id="score" name="score" min="1" max="10" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                    <div id="formMessage" class="mt-2"></div>
+                </form>
+                <!-- Results Table -->
+                <div class="mt-4" id="resultSection">
+                    <h3>New Review Information</h3>
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Username</th>
+                                <th>User's New Review</th>
+                                <th>Media Title</th>
+                                <th>New Average Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Include Font Awesome and Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const mediaDropdown = document.getElementById('mediaDropdown');
+            const addReviewForm = document.getElementById('addReviewForm');
+            const formMessage = document.getElementById('formMessage');
+            const resultTableBody = document.getElementById('resultTableBody');
+            const resultSection = document.getElementById('resultSection');
+
+            // Initial page load: Fetch media titles for the dropdown
+            try {
+                // Send a request to the backend to fetch all media items
+                const response = await fetch('/query6/mediaTitles');
+                const mediaList = await response.json();
+                mediaList.forEach(media => {
+                    const option = document.createElement('option');
+                    option.value = media.mediaID;
+                    option.textContent = `${media.mediaTitle}`;
+                    mediaDropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error during initial page load:', error);
+            }
+
+            // Handle form submission for adding a new review
+            if (addReviewForm) {
+                addReviewForm.addEventListener('submit', async (e) => {
+                    e.preventDefault(); // Prevent the default form submission
+                    formMessage.textContent = '';
+                    const formData = {
+                        name: document.getElementById('name').value.trim(),
+                        mediaID: document.getElementById('mediaDropdown').value.trim(),
+                        review: document.getElementById('review').value.trim(),
+                        score: document.getElementById('score').value.trim(),
+                        password: document.getElementById('password').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        profileImage: document.getElementById('profileImage').value.trim(),
+                        description: document.getElementById('description').value.trim()
+                    };
+
+                    // Validate form data
+                    if (!formData.name || !formData.mediaID || !formData.review || !formData.score || !formData.password || !formData.email) {
+                        formMessage.textContent = 'Please fill in all required fields.';
+                        formMessage.style.color = 'red';
+                        return;
+                    }
+                    // Send the form data to the backend
+                    formMessage.textContent = 'Submitting your review...';
+                    formMessage.style.color = 'blue';
+
+                    // Wait 2 seconds before submitting the form
+                    setTimeout(async () => {
+                        try {
+                            const response = await fetch('/query6/insertReview', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(formData)
+                            });
+                            const newReview = await response.json();
+                            resultTableBody.innerHTML = ''; // Clear previous results
+                            resultSection.style.display = 'block';
+
+                            if (response.ok) {
+                                formMessage.textContent = 'Review submitted successfully!';
+                                formMessage.style.color = 'green';
+                                addReviewForm.reset();
+                                if (newReview && newReview.user_name) {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td>${newReview.user_name}</td>
+                                        <td>${newReview.new_review}</td>
+                                        <td>${newReview.mediaTitle}</td>
+                                        <td>${newReview.avg_score}</td>
+                                    `;
+                                    resultTableBody.appendChild(tr);
+                                } else {
+                                    resultTableBody.innerHTML = `<tr><td colspan="4">No review information available.</td></tr>`;
+                                }
+                            } else {
+                                const error = await response.text();
+                                formMessage.textContent = 'Error: ' + error;
+                                formMessage.style.color = 'red';
+                            }
+                        } catch (err) {
+                            formMessage.textContent = 'Error submitting review.';
+                            formMessage.style.color = 'red';
+                        }
+                    }, 2000);
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

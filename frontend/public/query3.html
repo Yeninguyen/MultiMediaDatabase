@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genre Count Summary</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/morph/bootstrap.min.css">
+    <link rel="icon" type="image/png" href="http://34.169.216.0:5002/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="http://34.169.216.0:5002/assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="http://34.169.216.0:5002/assets/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="http://34.169.216.0:5002/assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="http://34.169.216.0:5002/assets/favicon/site.webmanifest" />
+    <style>
+        content-section {
+            background-color: #f8f9fa;
+            /* Light gray background */
+        }
+
+        .feature-box {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="fas fa-film"></i> Multi-Media Database </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="query1.html">Media Entries by Series</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query2.html">Review Viewer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query3.html">Genre Count Summary</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query4.html">Highest-Rated Media by Writer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query5.html">Reviewed Media Released After 2010</a></li>
+                    <li class="nav-item"><a class="nav-link" href="query6.html">Create New Review</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content -->
+    <div class="content-section">
+        <div class="container">
+            <div class="feature-box">
+                <h2>Genre Count Summary</h2>
+                <div class="mb-3">
+                    <label for="query3Dropdown" class="form-label">Select Genre Information:</label>
+                    <select id="query3Dropdown" class="form-control">
+                        <option value="">All Genre Entries</option>
+                    </select>
+                </div>
+                <!-- Results Table -->
+                <div class="mt-4" id="resultSection">
+                    <h3>Genre and Media Count Summary</h3>
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Genre's Name</th>
+                                <th>Number of Media</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Include Font Awesome and Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const query3Dropdown = document.getElementById('query3Dropdown');
+            const resultSection = document.getElementById('resultSection');
+            const resultTableBody = document.getElementById('resultTableBody');
+
+            // fetches and displays Genre entries based on series selection
+            const fetchAndDisplayMediaTypeDetails = async (selectedTypeName) => {
+                let url = '/query3/genreCountOfType';
+                if (selectedTypeName) {
+                    url += `?TypeName=${selectedTypeName}`;
+                }
+
+                try {
+                    const response = await fetch(url);
+                    const mediaTypeEntries = await response.json();
+                    resultTableBody.innerHTML = ''; // Clear previous results
+                    resultSection.style.display = 'block';
+
+                    if (mediaTypeEntries.length > 0) {
+                        mediaTypeEntries.forEach(entry => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                    <td>${entry.genreName|| 'N/A'}</td>
+                    <td>${entry.mediacount || 'N/A'}</td>
+                `;
+                            resultTableBody.appendChild(tr);
+                        });
+                    } else {
+                        resultTableBody.innerHTML = `<tr><td colspan="2">No genre and media count found for this selection.</td></tr>`;
+                    }
+                } catch (error) {
+                    console.error('Error fetching media type entries:', error);
+                    resultTableBody.innerHTML = `<tr><td colspan="2">Error loading data.</td></tr>`;
+                }
+            };
+
+            try {
+                // Send a request to the backend to fetch series details
+                const response = await fetch('/query3/mediaTypes');
+                const mediaTypeList = await response.json();
+                mediaTypeList.forEach(mediaType => {
+                    const option = document.createElement('option');
+                    option.value = mediaType.name;
+                    option.textContent = `${mediaType.name}`;
+                    query3Dropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error during initial page load:', error);
+            }
+            
+            // Initial fetch to display all genre's details
+            fetchAndDisplayMediaTypeDetails(null);
+
+            // event listener for media type dropdown change
+            query3Dropdown.addEventListener('change', async (event) => {
+                const selectedTypeName = event.target.value;
+                fetchAndDisplayMediaTypeDetails(selectedTypeName);
+            });
+        });
+    </script>
+</body>
+</html>
